@@ -2,6 +2,7 @@ import express from "express";
 import http from "http";
 import cors from "cors";
 import { Server } from "socket.io";
+import ss from "socket.io-stream";
 import { addDevice, getDevice, getDevicesInRoom } from "./users.js";
 const PORT = 5000;
 const app = express();
@@ -38,6 +39,12 @@ io.on("connection", (socket) => {
     console.log(file);
     socket.to(device[0]).emit("receive_file", file);
   });
+
+  //  get live streaming data->
+
+  socket.on("stream", (stream) => {
+    io.emit("stream-data", stream);
+  }); 
 
   socket.on("disconnect", () => {
     console.log("user left");
