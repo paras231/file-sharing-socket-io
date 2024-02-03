@@ -3,7 +3,12 @@ import http from "http";
 import cors from "cors";
 import { Server } from "socket.io";
 import ss from "socket.io-stream";
+import dotenv from 'dotenv';
+import cloudinary from "./utils/cloudinraryConfig.js";
 import { addDevice, getDevice, getDevicesInRoom } from "./users.js";
+
+dotenv.config();
+
 const PORT = 5000;
 const app = express();
 
@@ -19,32 +24,27 @@ const io = new Server(server, {
   maxHttpBufferSize: 1e8,
 });
 
-const devices = [];
-const device = {};
+
+let users = [];
+
 io.on("connection", (socket) => {
   console.log(socket.id);
-  socket.on("join_room", (data, callback) => {
-    devices.push(data);
-    //  join the room->
-    socket.join(data.roomName);
-    // emit notification event after joining->
-    socket
-      .to(data.roomName)
-      .emit("notify", { text: `device ${data.deviceName} connected` });
-  });
+ 
+socket.on("join",(userId)=>{
+  users.push(userId);
+  console.log(users);
+  //  perform any operations with users data here-:
+});
 
-  //  send file after joining->
-  socket.on("send_file", (file, callback) => {
-    const device = devices.map((device) => device.roomName);
-    console.log(file);
-    socket.to(device[0]).emit("receive_file", file);
-  });
+//  get sent file from client side
 
-  //  get live streaming data->
-
-  socket.on("stream", (stream) => {
-    io.emit("stream-data", stream);
-  }); 
+socket.on("file_share",async(file)=>{
+  
+  //  process the received file and save to cloudinary
+const result =  await cloudinary.v2.uploader.upload(file);
+// now process the file url from result and send it back to client
+  socket.emit('send_file',result.secure_url);
+})
 
   socket.on("disconnect", () => {
     console.log("user left");

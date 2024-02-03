@@ -5,11 +5,13 @@ const initialState: {
   notification: { text: string };
   receivedFile: any;
   streamData: any;
+  file:any | string;
 } = {
   socket: null,
   notification: { text: "" },
   receivedFile: null,
   streamData: null,
+  file:null
 };
 type socketContextProps = {
   children: React.ReactNode;
@@ -43,7 +45,7 @@ export const SocketContextProvider = ({ children }: socketContextProps) => {
     socket.on("connection", () => {
       console.log("socket connected", socket);
     });
-  }, []);
+  }, [socket]);
 
   useEffect(() => {
     socket?.on("notify", (res: any) => {
@@ -57,6 +59,14 @@ export const SocketContextProvider = ({ children }: socketContextProps) => {
     });
   },[]);
 
+
+  // get file from server by cloudinary url
+
+  useEffect(()=>{
+    socket?.on("send_file",(url:string|any)=>{
+      setFile(url);
+    })
+  })
   
 
   return (
@@ -67,7 +77,7 @@ export const SocketContextProvider = ({ children }: socketContextProps) => {
           notification: notification,
           receivedFile: receivedFile,
           streamData: streamData,
-          
+          file:receivedFile
         }}
       >
         {children}
